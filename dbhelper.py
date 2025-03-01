@@ -36,8 +36,8 @@ class DBHelper:
         conn.commit()
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS bank_links(
-        from_id VARCHAR(100) NOT NULL,
-        to_id VARCHAR(100) NOT NULL,
+        from_bic VARCHAR(100) NOT NULL,
+        to_bic VARCHAR(100) NOT NULL,
         time INT
         )
         """)
@@ -65,10 +65,10 @@ class DBHelper:
     def add_bank_details(self,param):
         conn = self.get_db_connection()
         cursor = conn.cursor()
-        name = param.get("user")
+        bank_name = param.get("bank_name")
         charges = param.get("charges")
-        query = "INSERT INTO users (name,charges) VALUES(%s,%s)"
-        values = (name,charges)
+        query = "INSERT INTO bank_details (bank_name,charges) VALUES(%s,%s)"
+        values = (bank_name,charges)
         try:
             cursor.execute(query,values)
             conn.commit()
@@ -78,5 +78,22 @@ class DBHelper:
         finally:
             cursor.close()
             conn.close()
-    def add_bank_links():
-        
+
+    def link_bank(self,param):
+        conn = self.get_db_connection()
+        cursor = conn.cursor()
+        from_bic = param.get("from_bic")
+        to_bic = param.get("to_bic")
+        time = param.get("time")
+        query = "INSERT INTO bank_details (from_bic,to_bic,time) VALUES(%s,%s,%s)"
+        values = (from_bic,to_bic,time)
+        try:
+            cursor.execute(query,values)
+            conn.commit()
+            return {"message":"succesfully added bank details"}, 201
+        except mysql.connector.IntegrityError:
+            return {"error": "Bank_id already exists!"}, 400
+        finally:
+            cursor.close()
+            conn.close()
+    
