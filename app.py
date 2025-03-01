@@ -52,44 +52,44 @@ app = Flask(__name__)
 CORS(app)
 
 @app.route('/add_bank', methods=['POST'])
-def AddUser():
+def AddBank():
+    if not data.get("bic") or not data.get("charges"):
+        return jsonify({"error": "Missing required parameters in banks"}), 400
     data = request.json
-    response = db_helper.add_bank(
-        data['bank_name'],
-        data['charges']
-    )
+    response = db_helper.add_bank(data)
     return jsonify(response), response[1] if isinstance(response, tuple) else 200
 
 
 @app.route('/add_user', methods=['POST'])
 def AddUser():
+    if not data.get("name") or not data.get("phonenumber") or not data.get("accountnumber") or not data.get("bic") or not data.get("ammount"):
+        return jsonify({"error": "Missing required parameters in user"}), 400
     data = request.json
-    response = db_helper.add_user(
-        data['name'],
-        data['phone_number'],
-        data['account_number'],
-        data['balance'],
-        data['bank_name']
-    )
+    response = db_helper.add_user(data)
     return jsonify(response), response[1] if isinstance(response, tuple) else 200
 
 
 @app.route('/link_bank', methods=['POST'])
-def AddUser():
+def LinkBank():
+    if not data.get("from_bic") or not data.get("to_bic"):
+        return jsonify({"error": "Missing required parameters in link banks"}), 400
     data = request.json
-    response = db_helper.link_bank(
-        data['from'],
-        data['to']
-    )
+    response = db_helper.link_bank(data)
     return jsonify(response), response[1] if isinstance(response, tuple) else 200
 
 
 @app.route('/fast_route', methods=['POST'])
 def FastRoute():
     data = request.json
-    response = check(data)
-    response = find_fastroute(data["from"],data["to"])
-    return jsonify(response), response[1] if isinstance(response, tuple) else 200
+    if not data.get("from_bic") or not data.get("to_bic") or not data.get("from_acc") or not data.get("to_acc") or not data.get("amount") or not data.get("name"):
+        return jsonify({"error": "Missing required parameters in fast routes"}), 400
+    response = find_fastroute(data["from_bic"],data["to_bic"])
+    req_amount = data["amount"] + response["charge"]
+    rem_bal = db_helper.get_balance(data["from_acc"])
+    if rem_bal < req_amount:
+        return jsonify({"error": "Insufficient balance"}), 400 
+    db_helper.transfer(data,req_amount)
+    return 
 
 if __name__ == '__main__':
     app.run(debug=True)
