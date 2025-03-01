@@ -79,3 +79,4 @@ class DBHelper:
             cursor.close()
             conn.close()
     def add_bank_links():
+        
