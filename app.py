@@ -4,30 +4,49 @@ from dbhelper import db_helper
 import networkx as nx
 import pandas as pd
 
-csv_file = "links.csv"
-df = pd.read_csv(csv_file)
+class initial_graph:
+    def __init__(self):
+        self.G1 = nx.DiGraph()
+        links=fdbhelper.get_links()
+        for e1,e2,w in links:
+            self.G1.add_edge(e1,e2,weight=w)
 
-G = nx.DiGraph()
+        self.G2 = nx.DiGraph()
+        charges=fdbhelper.get_charges()
+        self.node_weights={}
+        for node,ch in charges:
+            self.node_weights[node]=ch
 
-for _, row in df.iterrows():
-    G.add_edge(row["From"], row["To"], weight=row["Time"])
+        for e3,e4,_ in links:
+            self.G2.add_edge(e3,e4,weight=node_weights[e3])
 
-start_node = "A" 
-end_node = "F"
-try:
-    shortest_path = nx.dijkstra_path(G, start_node, end_node, weight="weight")
-    shortest_distance = nx.dijkstra_path_length(G, start_node, end_node, weight="weight")
+    def find_fast_route(self,start_node,end_node):
+        try:
+            shortest_path = nx.dijkstra_path(self.G1, start_node, end_node, weight="weight")
+            shortest_distance = nx.dijkstra_path_length(self.G1, start_node, end_node, weight="weight")
+            # print(f"Shortest distance: {shortest_distance}")
+            path=f"Successfully find route: Shortest path from {start_node} to {end_node}: {' -> '.join(shortest_path)}
+            response={
+                "path":path
+                "charge":shortest_distance
+            }
+            return jsonify(response),200
+        except nx.NetworkXNoPath:
+            return jsonify({"error": f"No path found between {start_node} and {end_node}"}), 500
 
-    print(f"Shortest path from {start_node} to {end_node}: {' -> '.join(shortest_path)}")
-    print(f"Shortest distance: {shortest_distance}")
-except nx.NetworkXNoPath:
-    print(f"No path found between {start_node} and {end_node}")
+    def find_cheap_route(self,start_node,end_node):
+        try:
+            shortest_path = nx.dijkstra_path(self.G2, start_node, end_node, weight="weight")
+            shortest_distance = nx.dijkstra_path_length(self.G2, start_node, end_node, weight="weight")
+            path=f"Successfully find route: Shortest path from {start_node} to {end_node}: {' -> '.join(shortest_path)}
+            response={
+                "path":path
+                "charge":shortest_distance
+            }
+        except nx.NetworkXNoPath:
+            print(f"No path found between {start_node} and {end_node}")
 
-all_distances = nx.single_source_dijkstra_path_length(G, start_node, weight="weight")
-
-print("\nShortest distances from node A:")
-for node, distance in all_distances.items():
-    print(f"{node}: {distance}")
+Graph_object=initial_graph()
 
 app = Flask(__name__)
 CORS(app)
